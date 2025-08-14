@@ -35,7 +35,7 @@
         .global  main
 
 main:	.asmfunc
-        MOV     R0, #63001      ; R0 = s = 630001 = 251^2
+        MOV     R0, #29583      ; R0 = s = 630001 = 251^2
 
     ; Do NOT modify anything between double dashed lines.
 	; ==================================================
