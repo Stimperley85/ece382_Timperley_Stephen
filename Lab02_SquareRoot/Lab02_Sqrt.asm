@@ -51,13 +51,13 @@ main:	.asmfunc
 
     ; Write this as part of Lab 2
 
-loop                            ; R4 = t*t
-                                ; R4 = t*t + s
-                                ; R4 = (t*t + s)/t
-                                ; R2 = t = ((t*t + s)/t)/2
-                        		; i--
-                        		; i != 0?
-                        		; If so, go to loop
+loop   MUL R4, R2, R2                         ; R4 = t*t
+       ADD R4, R4, R0                         ; R4 = t*t + s
+       UDIV R4, R4, R2                         ; R4 = (t*t + s)/t
+       UDIV R2, R4, R1                         ; R2 = t = ((t*t + s)/t)/2
+       SUB R3, #1                 		; i--
+       CMP R3, #0                 		; i != 0?
+       BNE loop                 		; If so, go to loop
 
     ; end of your code
 
