@@ -68,6 +68,8 @@ main:   .asmfunc        ; Begins the assembly function
 ; ------------Initialization------------
         LDR     R2, ResAddr     ; Load the address of the Result array into R2 (pointer to store results)
         LDR     R3, NumsAddr    ; Load the address of the Nums array into R3 (pointer to read numbers)
+        MOV     R10, #1         ; Load 1 into register R10
+        MOV     R11, #0         ; Load 0 into register R11
 
 Loop1:
         LDR     R0, [R3], #4    ; Load a number from Nums into R0 and increment R3 to the next number
@@ -77,14 +79,14 @@ Loop1:
         CMP     R0, #1          ; Check if the current number is 1
         BEQ     False           ; If 1, branch to False (1 is not a prime number)
 
-        ASR     R5, R0, #1      ; Divide the number by 2 (m = n / 2) and store the result in R5
+        LSR     R5, R0, #1      ; Divide the number by 2 (m = n / 2) and store the result in R5
         MOV     R6, #2          ; Initialize R6 with 2 (i = 2)
 
 Loop2:
 ; ============ Add your code below ==============================
 ; solution
-								; Compare i with m (i > n / 2?)
-								; If i > m, the number is prime (branch to True)
+		CMP     R6, R5			; Compare i with m (i > n / 2?)
+		BHI     True			; If i > m, the number is prime (branch to True)
                                 ; Caution: are you checking signed or unsigned numbers?
 
 ; ============= End of your code ================================
@@ -93,6 +95,9 @@ Loop2:
         UDIV    R8, R0, R6      ; Divide the number by i (R0 / R6) and store the result in R8
         MUL     R9, R8, R6      ; Multiply the quotient by i and store the result in R9
         CMP     R0, R9          ; Compare the original number with the product (n == int(n / i) * i?)
+        BEQ     False           ; Branch to not Prime (False) if n == int(n / i) * i
+        ADD     R6, #1          ; if no branch, increment R6 by 1
+        B       Loop2           ; Run loop2 again
 
 ; ============ Add your code below ==============================
 ; solution
@@ -101,12 +106,12 @@ Loop2:
 
 
 True
-
-
+        STRB R10, [R2], #1      ; Store the 8 bit value of 1 R10 (#1) into address stored at R2
+        B Loop1                 ; Run loop1 again (for the next value in the string)
 
 False
-
-
+        STRB R11, [R2], #1      ; Store the 8 bit value of 1 R10 (#1) into address stored at R2
+        B Loop1                 ; Run loop1 again (for the next value in the string)
 
 
 ; ============= End of your code ================================
