@@ -60,7 +60,7 @@ SPAddr  .word   spell
         .global Decrypt ; external function
         .global main    ; main function
 
-main:   .asmfunc
+;main:   .asmfunc
 
         ; load registers for the arguments of the Encrypt function.
         LDR     R0, SPAddr

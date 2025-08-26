@@ -46,7 +46,7 @@ dec_msg .space 20   ; reserve 20 bytes of memory to store the decrypted message
 
 spell   .word 0xEBFEF6CB, 0xAEE1FAED, 0xFCFAEFDE, 0xE3FBE0E1, 0x0000ADAF
 
-key     .byte   0      ; key to encrypt/decrypt spell
+key     .byte   142      ; key to encrypt/decrypt spell
 
         ; 32-bit pointers to each of the variables in memory
 DMAddr  .word   dec_msg
@@ -56,7 +56,7 @@ SPAddr  .word   spell
         .global Decrypt ; external function
         .global main    ; main function
 
-;main:   .asmfunc
+main:   .asmfunc
 
         ; load registers for the arguments of the Encrypt function.
         LDR     R0, SPAddr

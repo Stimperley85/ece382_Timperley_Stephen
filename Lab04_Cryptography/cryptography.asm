@@ -61,16 +61,29 @@ Encrypt:   .asmfunc
 ; ============ Add your code and comments below ===================
 
     ; Use EOM defined at line 44 for '#'
+    PUSH {LR, R4-R8}        ; store registers in stack
+    MOV R4, R0              ; copy address at R0 to R4
+    MOV R5, R1              ; copy address at R1 to R5
+    MOV R6, R2              ; copy address at R2 to R6
+    LDRB R7, EOM             ; copy EOM character to R7
 
-
-
-
+Loop
+    LDRB R0, [R4], #1       ; load value of address at R4 to R0, then increment R4
+    MOV R1, R5              ; load key to R1
+    MOV R8, R0
+    ;BEQ Done                ; if null character finish without xor-ing
     ; You must use the XOR_bytes function for exclusive or!
-    BL XOR_bytes        ; XOR_Bytes
+    ;CMP R0, R7              ; compare R0 to the null character (EOM)
+    BL XOR_bytes            ; XOR_Bytes
+    STRB R0, [R6], #1       ; Store 8 bit value of R0 to address at R6 then increment
+    CMP R8, R7              ; compare R0 to the null character (EOM)
+    BEQ Done                ; if null character finish without xor-ing
+    B Loop
 
 
-
-
+Done
+    POP {LR, R4-R8}         ; restore saved registers from stack
+    BX LR                   ; return to LR
 
 ; =============== End of your code ================================
     .endasmfunc
@@ -93,14 +106,26 @@ Decrypt:    .asmfunc
 ; ============ Add your code and comments below ===================
 
     ; Use EOM defined at line 44 for '#'
+    PUSH {LR, R4-R8}        ; store registers in stack
+    MOV R4, R0              ; copy address at R0 to R4
+    MOV R5, R1              ; copy address at R1 to R5
+    MOV R6, R2              ; copy address at R2 to R6
+    LDRB R7, EOM             ; copy EOM character to R7
 
-
-
-
+Loop2
+    LDRB R0, [R4], #1       ; load value of address at R4 to R0, then increment R4
+    MOV R1, R5              ;LDRB R1, [R4], #1       ; load value of address at R5 to R1, then increment R5
     ; You must use the XOR_bytes function for exclusive or!
-    BL XOR_bytes        ; XOR_Bytes
+    BL XOR_bytes            ; XOR_Bytes
+    STRB R0, [R6], #1       ; Store 8 bit value of R0 to address at R6 then increment
+    CMP R0, R7              ; compare R0 to the null character (EOM)
+    BEQ Done2               ; if null character finish
+    B Loop2
 
 
+Done2
+    POP {LR, R4-R8}         ; restore saved registers from stack
+    BX LR                   ; return to LR
 
 
 ; =============== End of your code ================================
