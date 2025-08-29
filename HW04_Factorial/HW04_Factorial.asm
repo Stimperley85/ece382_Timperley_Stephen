@@ -70,7 +70,7 @@ Loop1   CMP     R6, #0          ; R6 == 0 ?
         BL      fact_iter       ; call fact_iter
         STR     R0, [R5], #4    ; store the output into RAM where R5 is pointing, and increment R5 by 4
         SUB     R6, #1          ; R6--
-        B       Loop1           ; go to Loop1 for the next number
+        B       Loop1           ; go to Loop1 for the next number B
 
 Next    LDR     R4, NumsAddr    ; R4 <= address of Nums, R4 is a pointer
         LDR     R5, Res2Addr    ; R5 <= address of Res2, R5 is a pointer
@@ -83,7 +83,7 @@ Loop2   CMP     R6, #0          ; R6 == 0 ?
         BL      fact_rec        ; call fact_rec
         STR     R0, [R5], #4    ; store the output into RAM where R5 is pointing, and increment R5 by 4
         SUB     R6, #1          ; R6--
-        B       Loop2           ; go to Loop2 for the next number
+        BL       Loop2           ; go to Loop2 for the next number B
 
 Stall   B        Stall          ; Stay here forever and observe the results in Memory Browser
 
@@ -93,14 +93,14 @@ Stall   B        Stall          ; Stay here forever and observe the results in M
 fact_iter:  .asmfunc            ; Begin assembly function
 
 ; ============ Add your code and comments below ===================
-                        ; Move R0 to another register so that we can use R0 for return value.
-                        ; Initalize return value; ret = 1
-Loop3                   ; n==0?
-                        ; If equal, done; else, execute the following lines.
-                        ; ret = ret * n
-                        ; n--
-                        ; while(n != 0)
-Exit1                   ; Return
+        MOV     R1, R0                ; Move R0 to another register so that we can use R0 for return value.
+        MOV     R0, #1                ; Initalize return value; ret = 1
+Loop3   CMP     R1, #0                ; n==0?
+        BEQ     Exit1                ; If equal, done; else, execute the following lines.
+        MUL     R0, R0, R1                ; ret = ret * n
+        SUB     R1, #1                ; n--
+        B       Loop3           ; while(n != 0) BL
+Exit1   BX LR                ; Return
 ; ============= End of your code ================================
 
         .endasmfunc
@@ -115,12 +115,13 @@ fact_rec:   .asmfunc            ; Begin assembly function
         BX      LR              ; Return
 
 ; ============ Add your code and comments below ===================
-Recur                   ; Preserve registers
-                        ; Save n for later use
-                        ; n-1
-                        ; fact_rec(n-1) for (n-1)!
-                        ; n * fact_rec(n-1)
-                        ; Restore registers and return
+Recur   PUSH    {LR, R1}                ; Preserve registers
+        MOV     R1, R0                ; Save n for later use
+        SUB     R0, #1                ; n-1
+        BL       fact_rec                ; fact_rec(n-1) for (n-1)!
+        MUL     R0, R1, R0                ; n * fact_rec(n-1)
+        POP     {LR, R1}                ; Restore registers and return
+        BX      LR
 ; ============= End of your code ================================
 
         .endasmfunc
