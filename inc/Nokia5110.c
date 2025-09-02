@@ -404,7 +404,9 @@ void Nokia5110_OutString(const char* ptr){
 
     // You write this as part of Lab 5
     // You must use Nokia5110_OutChar
-
+    while (*ptr != '\0') {
+        Nokia5110_OutChar(*ptr++);
+    }
 }
 
 
@@ -445,6 +447,12 @@ void Nokia5110_OutUDec(uint32_t n, int min_length){
 
     // Convert the number into a reversed string.
     int count = Nokia_Num2String(n);
+    for (int i = count; i < min_length; i++){
+        Nokia5110_OutChar(' ');
+    }
+    for (int i = count-1; i >= 0; i--){
+    Nokia5110_OutChar(Buffer[i]);
+    }
 }
 
 
@@ -455,9 +463,32 @@ void Nokia5110_OutSDec(int32_t n, int min_length){
     // Ensure the magnitude of -2147483648(0x80000000) is 2147483648(0x80000000).
     // You are not allowed to use the built-in abs() function.
     uint32_t x = 0;
+    if (n < 0) {
+        x = -n;
+        int count = Nokia_Num2String(x);
+        for (int i = count; i < (min_length-1); i++){
+            Nokia5110_OutChar(' ');
+        }
+        Nokia5110_OutChar('-');
+        for (int i = count-1; i >= 0; i--){
+        Nokia5110_OutChar(Buffer[i]);
+        }
+    } else {
+        x = n;
+        int count = Nokia_Num2String(x);
+        for (int i = count; i < (min_length); i++){
+            Nokia5110_OutChar(' ');
+        }
+        for (int i = count-1; i >= 0; i--){
+        Nokia5110_OutChar(Buffer[i]);
+        }
+    }
+
+
 
     // Convert the number into a reversed string.
     int count = Nokia_Num2String(x);
+
 
 }
 

@@ -89,10 +89,10 @@ void Program4(void) {
 
 void main(void) {
 
-    Program1();
-    Program2();
-    //Program3();
-    //Program4();
+    //Program1();
+    //Program2();
+    Program3();
+    Program4();
 
     while(1);
 }
