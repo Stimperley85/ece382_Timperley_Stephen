@@ -51,21 +51,21 @@ LED_Init:       .asmfunc
 
 ; function to turn off LED (P1.0)
 LED_Off:        .asmfunc
-        LDR     R1, P1OUT
+        LDR     R1, P1OUT       ;load pointer
         LDRB    R0, [R1]        ; 8-bit read
         BIC     R0, R0, #0x01   ; turn off
-        STRB    R0, [R1]
-        BX      LR
+        STRB    R0, [R1]        ;return that value to pointer location
+        BX      LR              ;branch back
         .endasmfunc
 
 
 ; function to turn on P1.0
 LED_On:         .asmfunc
-        LDR     R1, P1OUT
+        LDR     R1, P1OUT      ;load pointer
         LDRB    R0, [R1]       ; 8-bit read
-        ORR     R0, R0, #0x01   ; turn on
-        STRB    R0, [R1]
-        BX      LR
+        ORR     R0, R0, #0x01  ; turn on
+        STRB    R0, [R1]       ;return that value to pointer location
+        BX      LR             ;branch back
         .endasmfunc
 
 
@@ -76,11 +76,11 @@ LED_On:         .asmfunc
 ; Do not use LED_Off or LED_On
 LED_Toggle: 	.asmfunc
 ; add your code here
-        LDR     R1, P1OUT
-        LDRB    R0, [R1]
-        EOR     R0, R0, #0x01
-        STRB    R0, [R1]
-        BX      LR
+        LDR     R1, P1OUT ;load pointer
+        LDRB    R0, [R1]  ;load value at pointer
+        EOR     R0, R0, #0x01  ;xor first bit of pointer
+        STRB    R0, [R1]  ;return that value to pointer location
+        BX      LR        ;branch back
 
         .endasmfunc
 
