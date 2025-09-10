@@ -147,27 +147,31 @@ void Program8_3(void) {
         Clock_Delay1ms(100);
 
         // Read the state of the bump switches
-        bump = 0;       // update this line
+        bump = Bump_Read();       // update this line
 
         // Read the alarm activation switch (right-most bump switch, BUMP1)
         // If activated (armed), isArmed is set to true, otherwise false
-        isArmed = 0;    // update this line. Do not use hard-coded numbers.
+        isArmed = (BUMP1 == (bump & BUMP1));    // update this line. Do not use hard-coded numbers.
 
         // Read the window switches (BUMP5 and BUMP6)
         // windows is set based on the state of the two left bump switches
-        windows = 0;    // update this line. Do not use hard-coded numbers.
+        windows = (((bump & BUMP5)==BUMP5) && ((bump & BUMP6)==BUMP6));    // update this line. Do not use hard-coded numbers.
 
         // If the alarm is armed and the windows (BUMP5 and BUMP6) are not secure, toggle the LED
         // Otherwise, turn the LED off
         // Do not use hard-coded numbers.
-
+        if ((isArmed == 1) && (windows == 0)){
+            LED_Toggle();
+        } else {
+            LED_Off();
+        }
 
     }
 }
 
 
 void main(void){
-     Program8_1();
+    // Program8_1();
     // Program8_2();
-    // Program8_3();
+     Program8_3();
 }

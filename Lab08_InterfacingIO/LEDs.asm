@@ -22,7 +22,7 @@ P1REN   .word  0x40004C06
 
 ; Use this delay for Homework 8.
 ; You need to adjust this value in Lab8.
-DELAY   .word 1200000
+DELAY   .word 2000000
 
         ; global functions external function can access these functions.
         .global LED_Init
