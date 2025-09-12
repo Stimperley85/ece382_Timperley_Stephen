@@ -98,13 +98,9 @@ void Flash(void) {
     // Use Time_1ms to keep the LED light RED for 5 ms and BLUE for 5 ms.
     if (Time_1ms <= 5) {
         LaunchPad_RGB(RED);         // Red LED on
-        //Clock_Delay1us(high_us);
     } else {
         LaunchPad_RGB(BLUE);        // Blue LED on
-        //Clock_Delay1us(low_us);
     }
-
-
 
     // increment Time_1ms every time this function is executed.
     Time_1ms++;
@@ -211,10 +207,12 @@ void Program10_3(void){
     LaunchPad_RGB(MAGENTA);
     uint16_t count;
 
-    //EnableInterrupts();     // uncomment for background thread
+    EnableInterrupts();     // uncomment for background thread
 
     for (int i = 0; i < 1000; i++) {
+        //DisableInterrupts();
         count = Increment();        // uncomment for foreground thread
+        //EnableInterrupts();
         Clock_Delay1us(1000);
     }
 
@@ -234,7 +232,7 @@ void Program10_3(void){
 void main(void) {
 
     // Program10_1();
-     Program10_2();
-    //Program10_3();
+    // Program10_2();
+    Program10_3();
 
 }
