@@ -72,11 +72,12 @@ policies, either expressed or implied, of the FreeBSD Project.
 void UART0_Init(uint32_t baudrate){
 
     // you write this as part of Lab 11
-    /*
+
     // hold the USCI module in reset mode
-    EUSCI_A0->CTLW0
+    EUSCI_A0->CTLW0 |= 0x01;
 
     // Configure UART settings:
+
     // bit15=0,      no parity bits
     // bit14=x,      not used (parity disabled)
     // bit13=0,      LSB first
@@ -90,27 +91,28 @@ void UART0_Init(uint32_t baudrate){
     // bit2=0,       data mode (not address mode)
     // bit1=0,       do not transmit break
     // bit0=1,       hold logic in reset state for configuration
-    EUSCI_A0->CTLW0
+    EUSCI_A0->CTLW0 &= 0x0000; //0b0000000000000000;
+    EUSCI_A0->CTLW0 |= 0b0000000011000001;
 
     // Set the baud rate
     // N = clock/baud rate, for 115,200 baud: N = 12,000,000 / 115,200 = 104.1667
     // UCBR = int(N) = 104
     // Note: 'baudrate' is a function argument passed into this initialization function. 
-    EUSCI_A0->BRW
+    EUSCI_A0->BRW = 104;
 
     // Clear modulation control
     EUSCI_A0->MCTLW = 0;
     
     // Configure P1.3 and P1.2 as primary UART function pins
-    P1->SEL0
-    P1->SEL1
+    P1->SEL0 |= 0x0C;
+    P1->SEL1 &= ~0x0C;
 
     // enable the USCI module
-    EUSCI_A0->CTLW0
+    EUSCI_A0->CTLW0 &= ~0x01;
 
     // Disable UART interrupts (transmit ready, receive full, etc.)
-    EUSCI_A0->IE
-    */
+    EUSCI_A0->IE = 0x0;
+
 }
 
 //------------UART0_InChar------------
@@ -130,8 +132,8 @@ char UART0_InChar(void) {
 // Output: none
 void UART0_OutChar(char data){
     // you write this as part of Lab 11
-
-
+    while((EUSCI_A0->IFG & 0x02) == 0);
+    EUSCI_A0->TXBUF = data;
 }
 
 
@@ -142,7 +144,10 @@ void UART0_OutChar(char data){
 void UART0_OutString(const char* ptr){
     // you write this as part of Lab 11
     // You must use UART0_OutChar
-
+    while (*ptr != 0x00){
+        UART0_OutChar(*ptr);
+        ptr++;
+    }
 }
 
 //===============================================================

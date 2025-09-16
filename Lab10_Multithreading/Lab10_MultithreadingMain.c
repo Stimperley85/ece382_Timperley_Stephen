@@ -210,9 +210,9 @@ void Program10_3(void){
     EnableInterrupts();     // uncomment for background thread
 
     for (int i = 0; i < 1000; i++) {
-        //DisableInterrupts();
+        DisableInterrupts();        // disable interrupts to prevent race condition
         count = Increment();        // uncomment for foreground thread
-        //EnableInterrupts();
+        EnableInterrupts();         // re-enable interrupts
         Clock_Delay1us(1000);
     }
 
@@ -232,7 +232,7 @@ void Program10_3(void){
 void main(void) {
 
     // Program10_1();
-    // Program10_2();
-    Program10_3();
+     Program10_2();
+    //Program10_3();
 
 }

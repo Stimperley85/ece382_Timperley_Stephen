@@ -58,10 +58,17 @@ policies, either expressed or implied, of the FreeBSD Project.
 void Bump_Init(void){
     // write this as part of Homework 8
     // 1) configure P4.7-P4.5, P4.3, P4.2, and P4.0 as GPIO
+    //1110 1101 = 0xED
+    //0001 0010 = 0x12
+    P4->SEL0 &= ~0xED; // change select0 to 0
+    P4->SEL1 &= ~0xED; // change select1 to 0
+
     // 2) make P4.7-P4.5, P4.3, P4.2, and P4.0 in
+    P4->DIR &= ~0xED; //change DIR to 0
     // 3) enable pull resistors on P4.7-P4.5, P4.3, P4.2, and P4.0
+    P4->REN |= 0xED; //change REN to 1
     //    P4.7-P4.5, P4.3, P4.2, and P4.0 are pull-up
-  
+    P4->OUT |= 0xED; //change OUT to 1
 }
 
 
@@ -76,8 +83,14 @@ void Bump_Init(void){
 uint8_t Bump_Read(void) {
     // write this as part of Lab 8
     // 1)read the sensors (which are active low) and convert to active high
-
+    uint8_t S1 = (~(P4->IN)) & 0x01; //read data and take the first inverted bit
+    uint8_t S2 = (~(P4->IN)) & 0x0C; //read data and take the next inverted bits
+    uint8_t S3 = (~(P4->IN)) & 0xE0; //read data and take the next inverted bits
+    uint8_t S4 = 0x00; //initialize 6 (really 8) bit return value
     // 2. Select, shift, combine, and output
-    return 0; // replace this line
+    S2 = S2 >> 1; //shift 1 right
+    S3 = S3 >> 2; //shift 1 right
+    S4 = (S1 | S2 | S3); //or all bits together to get final value
+    return S4; // return the 6 bit bump data
 }
 
