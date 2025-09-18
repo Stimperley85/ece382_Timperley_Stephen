@@ -129,7 +129,7 @@ void Program11_1(void) {
 
 // char Name[] = {'B', 'a', 'e', 'k', 0}; // Add NULL at the end.
 // it is the same as the following.
-char Name[] = "Baek";
+char Name[] = "Tim";
 
 // =============== Program 11.2 =====================================
 // Transmit the first three letters of your last name
@@ -175,7 +175,7 @@ void Program11_3(void){
 
 
 void main(void){
-    Program11_1();
+    //Program11_1();
     //Program11_2();
-    //Program11_3();
+    Program11_3();
 }

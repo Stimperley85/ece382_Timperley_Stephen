@@ -83,8 +83,7 @@ void SPIA3_Init(void) {
     // bits5-2                  reserved
     // bit1       UCSTEM = 1;   UCSTE pin enables slave
     // bit0       UCSWRST = 1;  reset enabled
-    EUSCI_A3->CTLW0 &= 0x0000;
-    EUSCI_A3->CTLW0 |= 0b101011011111;
+    EUSCI_A3->CTLW0 = 0xAD83;
 
     // set the baud rate for the eUSCI which gets its clock from SMCLK
     // Clock_Init48MHz() from ClockSystem.c sets SMCLK = HFXTCLK/4 = 12 MHz
@@ -92,17 +91,17 @@ void SPIA3_Init(void) {
     EUSCI_A3->BRW = 3;
 
     // modulation is not used in SPI mode, so clear UCA3MCTLW
-    EUSCI_A3->MCTLW &= 0;
+    EUSCI_A3->MCTLW = 0;
     
     // configure P9.7, P9.5, and P9.4 as primary module function
     P9->SEL0 |= 0xB0;
     P9->SEL1 &= ~0xB0;
 
     // enable eUSCI module
-    EUSCI_A3->CTLW0 &= 0;
+    EUSCI_A3->CTLW0 &= ~0x0001;
 
     // disable interrupts
-    EUSCI_A3->IE &= 0b00;
+    EUSCI_A3->IE &= ~0x0003;
 
 }
 
@@ -113,6 +112,7 @@ void SPIA3_Init(void) {
 void SPIA3_Wait4Tx(void) {
 
     // Wait for transmitter to be empty (UCTXIFG)
+    while((EUSCI_A3->IFG & 0x0002)==0);
 
 }
 
@@ -138,7 +138,7 @@ void SPIA3_Wait4TxRxReady(void) {
 void SPIA3_WriteTxBuffer(char data) {
 
     // Send data using TXBUF
-
+    EUSCI_A3->TXBUF = data;
 }
 
 
@@ -150,7 +150,9 @@ void SPIA3_WriteTxBuffer(char data) {
 // The eUSCI module has no hardware FIFOs.
 void SPIA3_OutChar(char data) {
     // 1) Wait for transmitter to be empty (let previous frame finish)
+    while((EUSCI_A3->IFG & 0x0002)==0);
     // 2) Write data to TXBUF, starts SPI
+    EUSCI_A3->TXBUF = data;
 
 }
 
@@ -162,5 +164,9 @@ void SPIA3_OutChar(char data) {
 void SPIA3_OutString(const char* ptr){
 
     // you write this as part of Lab 11
+    while (*ptr != 0x00){
+        SPIA3_OutChar(*ptr);
+        ptr++;
+    }
 
 }
