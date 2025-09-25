@@ -58,10 +58,10 @@ void TimerA1_Init(void(*task)(void), uint16_t period_2us){
 
     // write this as part of Lab 13
 
-	/*
+
 	// halt timer A1
     // bits5-4=00,       stop mode
-	TIMER_A1->CTL          // halt Timer A1
+	TIMER_A1->CTL |= 0x0030;         // halt Timer A1
 
     // SMCLK, divide by 4, stop mode, clear, no interrupt
     // bits15-10=XXXXXX, reserved
@@ -71,7 +71,7 @@ void TimerA1_Init(void(*task)(void), uint16_t period_2us){
     // bit3=X,           reserved
     // bit2=0,           set this bit to clear
     // bit1=0,           no interrupt on timer
-	TIMER_A1->CTL
+	TIMER_A1->CTL = 0x0280;
 
     // no capture mode, compare mode, enable capture/compare interrupt, clear
     // bits15-14=00,     no capture mode
@@ -86,29 +86,27 @@ void TimerA1_Init(void(*task)(void), uint16_t period_2us){
     // bit2=0,           output this value in output mode 0
     // bit1=X,           capture overflow status
     // bit0=0,           clear capture/compare interrupt pending
-	TIMER_A1->CCTL[0]
+	TIMER_A1->CCTL[0] = 0x0010;
 
 	// compare match value
-    TIMER_A1->CCR[0]
+    TIMER_A1->CCR[0] = 0x001;
 
     // configure input clock divider / 6
-    TIMER_A1->EX0
+    TIMER_A1->EX0 = 0x0005;
 
     // interrupts enabled in the main program after all devices initialized
     // priority 2
-    NVIC->IP[ ]
+    NVIC->IP[10] = 0x40;
 
     // enable interrupt 10 in NVIC
-    NVIC->ISER[ ]
+    NVIC->ISER[0] = 0x00000400;
 
     // reset and start Timer A1 in up mode
     // MC = Up mode
     // TACLR = reset
     // bits5-4=01,       up mode
     // bit2=1,           TACLR clear
-    TIMER_A1->CTL
-
-    */
+    TIMER_A1->CTL |= 0x0014;
 }
 
 
