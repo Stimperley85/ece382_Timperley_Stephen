@@ -84,6 +84,7 @@ static bool IsNewDataDisplayed = false;    // semaphore
 void Task(void) {
     Time_100ms++;
     LEDOUT ^= 0x01;                 // toggle LED
+    //REDLED ^= 0x01;
     IsNewDataDisplayed = false;
 }
 
@@ -106,6 +107,7 @@ void LCDOut1(void) {
 // Blue LED blinks at 5 Hz in the foreground thread
 // LCD displays time elapsed at 4 Hz in the foreground thread.
 void Program13_1(void) {
+
 
     Clock_Init48MHz();
     LaunchPad_Init();  // built-in switches and LEDs
@@ -204,8 +206,33 @@ void MotorController(void){
     uint16_t rightDuty_permil = 0; //0 %
 
 	// Write this for Lab 13
+    if (Timer_10ms < 200){
+        leftDuty_permil = 400;      // 40%
+        rightDuty_permil = 400;     // 40%
+        Motor_Forward(leftDuty_permil, rightDuty_permil);
+        Timer_10ms++;
+    } else if ((Timer_10ms >= 200) && (Timer_10ms < 400)){
+        Motor_Coast();
+        Timer_10ms++;
 
-
+    } else if ((Timer_10ms >= 400) && (Timer_10ms < 600)){
+        leftDuty_permil = 250;      // 25%
+        rightDuty_permil = 250;     // 25%
+        Motor_Backward(leftDuty_permil, rightDuty_permil);
+        Timer_10ms++;
+    } else if ((Timer_10ms >= 600) && (Timer_10ms < 800)){
+        leftDuty_permil = 200;      // 20%
+        rightDuty_permil = 200;     // 20%
+        Motor_TurnLeft(leftDuty_permil, rightDuty_permil);
+        Timer_10ms++;
+    } else if ((Timer_10ms >= 800) && (Timer_10ms < 1000)){
+        leftDuty_permil = 200;      // 20%
+        rightDuty_permil = 200;     // 20%
+        Motor_TurnRight(leftDuty_permil, rightDuty_permil);
+        Timer_10ms++;
+    } else if (Timer_10ms >= 1000){
+        Timer_10ms = 0;
+    }
 }
 
 
@@ -236,8 +263,9 @@ void Program13_3(void) {
 	// Write this for Lab 13
 
     // Initialize Timer A1 to run MotorController at 100 Hz
-	// const uint16_t period_2us =      ; // T = 5,000 * 2us = 10ms --> 100 Hz
-	// TimerA1_Init(/*pass a function pointer here*/, period_2us);  // 100 Hz
+	const uint16_t period_2us = 5000     ; // T = 5,000 * 2us = 10ms --> 100 Hz
+	TimerA1_Init(&MotorController, period_2us);  // 100 Hz
+
 
     // Enable Interrupts
     EnableInterrupts();
@@ -260,7 +288,7 @@ void Program13_3(void) {
 
 }
 int main(void){
-	Program13_1();
+	//Program13_1();
 	//Program13_2();
-	//Program13_3();
+	Program13_3();
 }

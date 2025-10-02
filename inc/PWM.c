@@ -60,20 +60,20 @@ void PWM_Init34(uint16_t period){
     // write this as part of Lab 13
     // Initialize P2.7 and P2.6 - EN PWML/PWMR
 
-    /*
-    P2->SEL0
-    P2->SEL1
-    P2->DIR
-    TIMER_A0->CCTL[0] =			// CCI0 toggle
-    TIMER_A0->CCR[0] =			// T_PWM is CCR0*4/3 us, if CCR0 = 15000, T_PWM = 20 ms.
-    TIMER_A0->EX0 =				// divide by 1
-    TIMER_A0->CCTL[3] =			// CCR3 toggle/reset
-    TIMER_A0->CCR[3] =			// CCR3 duty cycle is duty1/period
-    TIMER_A0->CCTL[4] =			// CCR4 toggle/reset
-    TIMER_A0->CCR[4] =			// CCR4 duty cycle is duty2/period
-    TIMER_A0->CTL =				// SMCLK=12MHz, divide by 8, up-down mode
-    */
     
+    P2->SEL0 |= 0xC0;
+    P2->SEL1 &= ~0xC0;
+    P2->DIR |= 0xC0;
+    TIMER_A0->CCTL[0] = 0x0000;		// CCI0 toggle
+    TIMER_A0->CCR[0] =	period;		// T_PWM is CCR0*4/3 us, if CCR0 = 15000, T_PWM = 20 ms.
+    TIMER_A0->EX0 = 0b000;		// divide by 1
+    TIMER_A0->CCTL[3] |= 0x0040;		// CCR3 toggle/reset
+    TIMER_A0->CCR[3] =	0;		// CCR3 duty cycle is duty1/period
+    TIMER_A0->CCTL[4] |= 0x0040;			// CCR4 toggle/reset
+    TIMER_A0->CCR[4] =	0;		// CCR4 duty cycle is duty2/period
+    TIMER_A0->CTL =	0x02F0;			// SMCLK=12MHz, divide by 8, up-down mode
+
+
 }
 
 
@@ -92,8 +92,11 @@ void PWM_DutyRight(uint16_t duty_permil){
     // write this as part of Lab 13
 
     // if new duty cycle is greater than period, return immediately
-
+    if (duty > TIMER_A0->CCR[0]) {
+        return;
+    }
     // assign new duty cycle to CCR[3]
+    TIMER_A0->CCR[3] = duty;
 
 
 }
@@ -114,7 +117,10 @@ void PWM_DutyLeft(uint16_t duty_permil){
     // write this as part of Lab 13
 
     // if new duty cycle is greater than period, return immediately
-
+    if (duty > TIMER_A0->CCR[0]) {
+        return;
+    }
     // assign new duty cycle to CCR[4]
+    TIMER_A0->CCR[4] = duty;
 
 }

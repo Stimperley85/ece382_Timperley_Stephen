@@ -61,7 +61,7 @@ void TimerA1_Init(void(*task)(void), uint16_t period_2us){
 
 	// halt timer A1
     // bits5-4=00,       stop mode
-	TIMER_A1->CTL |= 0x0030;         // halt Timer A1
+	TIMER_A1->CTL &= ~0x0030;         // halt Timer A1
 
     // SMCLK, divide by 4, stop mode, clear, no interrupt
     // bits15-10=XXXXXX, reserved
@@ -89,7 +89,7 @@ void TimerA1_Init(void(*task)(void), uint16_t period_2us){
 	TIMER_A1->CCTL[0] = 0x0010;
 
 	// compare match value
-    TIMER_A1->CCR[0] = 0x001;
+    TIMER_A1->CCR[0] = period_2us - 1;
 
     // configure input clock divider / 6
     TIMER_A1->EX0 = 0x0005;
@@ -116,25 +116,24 @@ void TimerA1_Init(void(*task)(void), uint16_t period_2us){
 // Output: none
 void TimerA1_Stop(void){
     // write this as part of Lab 13
-    /*
+
 
     // halt Timer A1 - MC  = stop mode
-	TIMER_A1->CTL
+	TIMER_A1->CTL &= ~0x0030;
 	// disable interrupt 10 in NVIC
-    NVIC->ICER[ ]
+    NVIC->ICER[0] = 0x00000400;
 
-    */
 }
 
 
 void TA1_0_IRQHandler(void){
     // write this as part of Lab 13
-    /*
+
     // acknowledge capture/compare interrupt 0 / CCIFG = no interrupt pending
-	TIMER_A1->CCTL[0]
+	TIMER_A1->CCTL[0] &= ~0x0001;
+	//TIMER_A1->CCTL[0] = 0x0000;
 
 	// execute user task
     (*TimerA1Task)();
-    */
 
 }
