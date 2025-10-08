@@ -169,11 +169,25 @@ void LCDOut2(void) {
     // At row 3 and col 6
     // Display the bump data in hex
     // Write your code here.
+    uint8_t x = BumpInt_Read();
+    Nokia5110_SetCursor2(3,6);
+    Nokia5110_OutU8Hex(x);
 
     // At row 4 col 6
     // Display the number of collisions in decimal with a fixed length of 5.
     // Write your code here.
-
+//    uint32_t num = 0;
+//    for (int i=0;i<8;i++){
+//
+//        if (x & 0x01){
+//            num++;
+//        }
+//        x = x >> 1;
+//    }
+//    Nokia5110_SetCursor2(4,6);
+//    Nokia5110_OutChar(num+'0');
+      Nokia5110_SetCursor2(4,6);
+      Nokia5110_OutUDec(NumCollisions,5);
 }
 
 // ===================== Collision2 ==============================
@@ -232,12 +246,12 @@ typedef struct command {
 // 2. Turn right slowly for 1.5 seconds (30% duty cycle)
 // 3. Move forward quickly for 1 second (40% duty cycle)
 // 4. Turn left slowly for 1.5 seconds  (30% duty cycle)
-#define NUM_STEPS   0    // update this line
+#define NUM_STEPS   4    // update this line
 const command_t Control[NUM_STEPS]={
 	{200, 200, &Motor_Backward, 2000},
-	{0,	0, 0,    			0},	// replace this line
-	{0, 0, 0,    			0}, // replace this line
-	{0, 0, 0,    			0}  // replace this line
+	{300, 300, &Motor_TurnRight, 1500},	// replace this line
+	{400, 400, &Motor_Forward, 1000}, // replace this line
+	{300, 300, &Motor_TurnLeft, 1500}  // replace this line
 };
 
 
@@ -252,7 +266,13 @@ uint32_t CurrentStep;   // 0, 1, 2..., NUM-1
 // duration for the current command is complete.
 void Controller3(void) {
     // Write this as part of Lab 14
+    Control[CurrentStep].MotorFunction(Control[CurrentStep].dutyLeft_permil, Control[CurrentStep].dutyRight_permil);
     // Controller should increment the timer (ElapsedTime_ms)
+    ElapsedTime_ms++;
+    if (ElapsedTime_ms == Control[CurrentStep].duration_ms){
+        CurrentStep = (CurrentStep+1)%4;
+        ElapsedTime_ms = 0;
+    }
 
 }
 
@@ -264,6 +284,8 @@ void Controller3(void) {
 void Collision3(uint8_t bumpSensor) {
     // Write this as part of Lab 14
     // Note: After collision, the robot must move backward.
+    CurrentStep = 0;
+    ElapsedTime_ms = 0;
 
 }
 
@@ -278,15 +300,20 @@ void Program14_3(void) {
     Motor_Init();
 	// write this as part of Lab 14, Integrated Robotic System
 	// Initialize Bump with the Collision() function you wrote
-
+    BumpInt_Init(&Collision3);
 	// Initialize Timer A1 with the Controller() function you wrote at 1000 Hz
-    uint16_t const period_2us = 0;	// Update this line for T = 1ms
+    uint16_t const period_2us = 500;	// Update this line for T = 1ms
+
 	
 	// Initialize Step to the first command
-
+    CurrentStep = 0;
 	// Run the first command
-
+    //Control[0].MotorFunction;
     // Reset Elapsed Time
+    ElapsedTime_ms = 0;
+
+    TimerA1_Init(&Controller3, period_2us);
+
 
 
     // ================================================
@@ -299,7 +326,7 @@ void Program14_3(void) {
 }
 
 int main(void){
-    Program14_1();
+    //Program14_1();
     //Program14_2();
-    //Program14_3();
+    Program14_3();
 }
