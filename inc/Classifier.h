@@ -16,6 +16,17 @@
 
 enum scenario {
     ClassificationError = 0,
+    LeftTooClose = 1,
+    RightTooClose = 2,
+    CenterTooClose = 4,
+    Straight = 8,
+    LeftTurn = 9,
+    RightTurn = 10,
+    TeeJoint = 11,
+    LeftJoint = 12,
+    RightJoint = 13,
+    CrossRoad = 14,
+    Blocked = 15
 };
 
 typedef enum scenario scenario_t;
