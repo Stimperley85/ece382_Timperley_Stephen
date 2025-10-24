@@ -294,20 +294,20 @@ void LCDOut4(void){
     // At row 3 display the filtered left ADC data and the left distance
     Nokia5110_SetCursor2(3,4);
     Nokia5110_OutUDec(FilteredLeft,4);
-    Nokia5110_SetCursor2(3,10);
+    Nokia5110_SetCursor2(3,9);
     Nokia5110_OutUDec(DistLeft_mm,3);
 
     // At row 4 display the filtered left ADC data and the left distance
     Nokia5110_SetCursor2(4,4);
     Nokia5110_OutUDec(FilteredCenter,4);
-    Nokia5110_SetCursor2(4,10);
+    Nokia5110_SetCursor2(4,9);
     Nokia5110_OutUDec(DistCenter_mm,3);
 
 
     // At row 5 display the filtered right ADC data and the right distance
     Nokia5110_SetCursor2(5,4);
     Nokia5110_OutUDec(FilteredRight,4);
-    Nokia5110_SetCursor2(5,10);
+    Nokia5110_SetCursor2(5,9);
     Nokia5110_OutUDec(DistRight_mm,3);
 
     // At row 6 display the classification.
