@@ -75,9 +75,9 @@ void TimerA3Capture_Init(void(*task0)(uint16_t time), void(*task1)(uint16_t time
 	CaptureTask1 = 	task1;   	       // Assign the user function for P10.5 interrupts
 
     // Set P10.4 and P10.5 as Timer A3 input capture pins
-	P10->SEL0 &= ~0x0030;
-	P10->SEL1 &= ~0x0030;
-	P10->DIR &= ~0x0030;
+	P10->SEL0 |= 0x30;
+	P10->SEL1 &= ~0x30;
+	//P10->DIR &= ~0x0030;
 	// Stop Timer A3 while configuring
 	TIMER_A3->CTL &= ~0x0030;
 
@@ -86,7 +86,8 @@ void TimerA3Capture_Init(void(*task0)(uint16_t time), void(*task1)(uint16_t time
 	TIMER_A3->CTL = 0x0200;
 
     // Set input clock divider to /8
-    TIMER_A3->EX0 |= 0x00C0;
+    //TIMER_A3->EX0 |= 0x00C0;
+	TIMER_A3->EX0 = 0x7;
 
     // Configure Timer A3 for rising edge capture on P10.4 and P10.5
     // synchronous capture source
@@ -95,14 +96,14 @@ void TimerA3Capture_Init(void(*task0)(uint16_t time), void(*task1)(uint16_t time
 	TIMER_A3->CCTL[1] = 0x4910;
 
 	// Set interrupt priorities for Timer A3
-	NVIC->IP[14] = 0x40;    // Priority 2 for TA3CCR0 (P10.4)
-	NVIC->IP[15] = 0x40;    // Priority 2 for TA3CCR1 (P10.5)
+	NVIC->IP[14] = 2 << 5; //0x40    // Priority 2 for TA3CCR0 (P10.4)
+	NVIC->IP[15] = 2 << 5; //0x40    // Priority 2 for TA3CCR1 (P10.5)
 
 	// Enable interrupts for Timer A3 in NVIC
-	NVIC->ISER[0] = 3 << 14;  // Enable interrupt 14 and 15
+	NVIC->ISER[0] = 0b11 << 14;  // Enable interrupt 14 and 15
 
     // Set Timer A3 to continuous mode and reset the timer
-	TIMER_A3->CTL &= 0x0024;
+	TIMER_A3->CTL |= 0x0024;
 
 }
 

@@ -115,11 +115,11 @@ void LCDSpeed1(void){
 
     // Write this as part of Lab 16
     LCDClear1();
-    Nokia5110_SetCursor2(3, 3); Nokia5110_OutUDec(LeftPeriod,4);   // Label for periods (P)
+    Nokia5110_SetCursor2(3, 4); Nokia5110_OutUDec(LeftPeriod,4);   // Label for periods (P)
     Nokia5110_SetCursor2(3, 9); Nokia5110_OutUDec(RightPeriod,4);   // Label for periods (P)
-    Nokia5110_SetCursor2(4, 3); Nokia5110_OutUDec(LeftSpeed_rpm,4);   // Label for speeds (S)
+    Nokia5110_SetCursor2(4, 4); Nokia5110_OutUDec(LeftSpeed_rpm,4);   // Label for speeds (S)
     Nokia5110_SetCursor2(4, 9); Nokia5110_OutUDec(RightSpeed_rpm,4);   // Label for speeds (S)
-    Nokia5110_SetCursor2(5, 3); Nokia5110_OutUDec(LeftDistance_mm,4);   // Label for distances (D)
+    Nokia5110_SetCursor2(5, 4); Nokia5110_OutUDec(LeftDistance_mm,4);   // Label for distances (D)
     Nokia5110_SetCursor2(5, 9); Nokia5110_OutUDec(RightDistance_mm,4);   // Label for distances (D)
 
 }
@@ -601,11 +601,11 @@ typedef struct command {
 } command_t;
 
 // Control parameters for various states (distances and duty cycles)
-#define FRWD_DIST       0   // Replace this line for forward distance
-#define BKWD_DIST       0   // Replace this line for backward distance
-#define TR90_DIST       0   // Replace this line for 90 degree turn
-#define TR60_DIST       0   // Replace this line for 60 degree turn
-#define TR30_DIST       0   // Replace this line for 30 degree turn
+#define FRWD_DIST       700   // Replace this line for forward distance
+#define BKWD_DIST       90   // Replace this line for backward distance
+#define TR90_DIST       111   // Replace this line for 90 degree turn
+#define TR60_DIST       74   // Replace this line for 60 degree turn
+#define TR30_DIST       37   // Replace this line for 30 degree turn
 
 #define NUM_STATES      5     // Number of robot states
 #define LEN_STR_STATE   5     // String length for state names
@@ -631,6 +631,8 @@ static void LCDClear3(void) {
 // Update the LCD with the current state and motor data
 static void LCDOut3(void) {
     // Write your code here
+    Nokia5110_SetCursor2(3,6); Nokia5110_OutString(strState[CurrentState]);  // Show current state
+    Nokia5110_SetCursor2(5, 4); Nokia5110_OutUDec(ControlCommands[CurrentState].dist_mm,5);   // Show distance traveled
 
 }
 
@@ -651,6 +653,7 @@ static void Controller3(void) {
 
     // FSM Output: Execute the motor command for the current state
     // Write your code here
+    ControlCommands[CurrentState].MotorFunction(left_permil, right_permil);
 
     // State transition logic based on bump sensors and distance
     bumpRead = Bump_Read();  // Read bump sensor status
@@ -663,19 +666,47 @@ static void Controller3(void) {
 
         case Forward:  // Moving forward
 
-            // Write your code here
 
+
+            // Write your code here
+            if (RightDistance_mm >= ControlCommands[CurrentState].dist_mm){
+                NextState = Stop;
+            }
+            if ((bumpRead & 0b00001000) || (bumpRead & 0b00000100)){
+                NextState = Backward;
+            }
+            if (bumpRead & 0b00000001){
+                NextState = LeftTurn;
+                ControlCommands[NextState].dist_mm = TR30_DIST;
+            }
+            if (bumpRead & 0b00000010){
+                NextState = LeftTurn;
+                ControlCommands[NextState].dist_mm = TR60_DIST;
+            }
+            if (bumpRead & 0b00100000){
+                NextState = RightTurn;
+                ControlCommands[NextState].dist_mm = TR30_DIST;
+            }
+            if (bumpRead & 0b00010000){
+                NextState = RightTurn;
+                ControlCommands[NextState].dist_mm = TR60_DIST;
+            }
             break;
 
         case Backward:  // Moving backward
 
             // Write your code here
-
+            if (RightDistance_mm <= -ControlCommands[CurrentState].dist_mm) {  // Finished backing up
+                NextState = LeftTurn;  // Move left again
+            }
             break;
 
         case LeftTurn:  // Turning left
 
             // Write your code here
+            if (RightDistance_mm >= ControlCommands[CurrentState].dist_mm) {  // Finished left turn
+                NextState = Forward;  // Move forward again
+            }
 
             break;
 
@@ -745,7 +776,7 @@ void Program16_3(void) {
 
 
 void main(void){
-    Program16_1();
+    //Program16_1();
     //Program16_2();
-    //Program16_3();
+    Program16_3();
 }
