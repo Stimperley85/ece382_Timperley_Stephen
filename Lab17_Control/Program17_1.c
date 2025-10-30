@@ -385,32 +385,42 @@ static void Controller(void){
     // ====================================================================
 
     // Obtain tachometer data and store in arrays.
-    Tachometer_GetSpeeds(0, 0);
+    Tachometer_GetSpeeds(&LeftTachoPeriod[idxTachoData], &RightTachoPeriod[idxTachoData]);
     // Update index in circular buffer.
-
+    idxTachoData = (idxTachoData + 1) % TACHBUFF_SIZE;
     // Step 1: Calculate average tachometer period over last ten values.
-    uint16_t leftPeriod = 0;
-    uint16_t rightPeriod = 0;
+    uint16_t leftPeriod = average(LeftTachoPeriod, TACHBUFF_SIZE);;
+    uint16_t rightPeriod = average(RightTachoPeriod, TACHBUFF_SIZE);;
 
     // Step 2: Calculate actual motor speed (RPM) using tachometer data.
-    LeftSpeed_rpm = 0;
-    RightSpeed_rpm = 0;
+    LeftSpeed_rpm = PULSE2RPM / LeftPeriod;
+    RightSpeed_rpm = PULSE2RPM / RightPeriod;
 
     // Step 3: Calculate speed errors by comparing to desired speed.
-    ErrorL = 0;
-    ErrorR = 0;
+    ErrorL = LeftSpeed_rpm - DesiredSpeed_rpm;
+    ErrorR = RightSpeed_rpm - DesiredSpeed_rpm;
 
     // Step 4: Accumulate errors for integral control.
-    AccumSpeedErrorL = 0;
-    AccumSpeedErrorR = 0;
+    AccumSpeedErrorL = AccumSpeedErrorL + ErrorL;
+    AccumSpeedErrorR = AccumSpeedErrorR + ErrorR;
 
     // Step 5: Calculate control outputs (duty cycles) using PI control formula.
-    LeftDuty_permil = 0;
-    RightDuty_permil = 0;
+    LeftDuty_permil = (Kp*ErrorL)+(Ki*AccumSpeedErrorL);
+    RightDuty_permil = (Kp*ErrorR)+(Ki*AccumSpeedErrorR);
 
     // Step 6: Ensure duty cycles are within predefined bounds, MINMAX.
-    LeftDuty_permil = 0;
-    RightDuty_permil = 0;
+    if (LeftDuty_permil > PWMMAX){
+        LeftDuty_permil = PWMMAX;
+    }
+    if (LeftDuty_permil < PWMMIN){
+        LeftDuty_permil = PWMMIN;
+    }
+    if {RightDuty_permil > PWMMAX){
+        RightDuty_permil = PWMMAX;
+    }
+    if (RightDuty_permil < PWMMIN){
+        RightDuty_permil = PWMMIN;
+    }
 
 	
     // ====================================================================
