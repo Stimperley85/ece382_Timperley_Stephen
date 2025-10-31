@@ -91,8 +91,8 @@ policies, either expressed or implied, of the FreeBSD Project.
 // static uint32_t Kp = 1;  // This corresponds to an actual Kp of 0.001 due to division by GainDivider.
 // static uint32_t Kp = 91; // Here, Kp is effectively 0.091 (91/1000).
 
-static int32_t Kp = 0;  // Proportional gain, scaled by GAIN_DIVIDER
-static int32_t Ki = 0;  // Integral gain, scaled by GAIN_DIVIDER
+static int32_t Kp = 800;  // Proportional gain, scaled by GAIN_DIVIDER
+static int32_t Ki = 1;  // Integral gain, scaled by GAIN_DIVIDER
 
 // Target speed for the motors, in revolutions per minute (rpm)
 static uint16_t DesiredSpeed_rpm = 80;    // 80 rpm
@@ -393,12 +393,12 @@ static void Controller(void){
     uint16_t rightPeriod = average(RightTachoPeriod, TACHBUFF_SIZE);;
 
     // Step 2: Calculate actual motor speed (RPM) using tachometer data.
-    LeftSpeed_rpm = PULSE2RPM / LeftPeriod;
-    RightSpeed_rpm = PULSE2RPM / RightPeriod;
+    LeftSpeed_rpm = PULSE2RPM / leftPeriod;
+    RightSpeed_rpm = PULSE2RPM / rightPeriod;
 
     // Step 3: Calculate speed errors by comparing to desired speed.
-    ErrorL = LeftSpeed_rpm - DesiredSpeed_rpm;
-    ErrorR = RightSpeed_rpm - DesiredSpeed_rpm;
+    ErrorL =  DesiredSpeed_rpm - LeftSpeed_rpm;
+    ErrorR =  DesiredSpeed_rpm - RightSpeed_rpm;
 
     // Step 4: Accumulate errors for integral control.
     AccumSpeedErrorL = AccumSpeedErrorL + ErrorL;
@@ -415,7 +415,7 @@ static void Controller(void){
     if (LeftDuty_permil < PWMMIN){
         LeftDuty_permil = PWMMIN;
     }
-    if {RightDuty_permil > PWMMAX){
+    if (RightDuty_permil > PWMMAX){
         RightDuty_permil = PWMMAX;
     }
     if (RightDuty_permil < PWMMIN){
