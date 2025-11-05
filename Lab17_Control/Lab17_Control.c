@@ -45,8 +45,8 @@ policies, either expressed or implied, of the FreeBSD Project.
 #include "Program17_3.h"
 
 int main(void){
-    Program17_1();
-    //Program17_3();
+    //Program17_1();
+    Program17_3();
 }
 
 
