@@ -49,8 +49,8 @@
 
 
 // Complete the following lines
-#define SIDEMIN    212   // smallest side distance to the wall in mm
-#define SIDEMAX    354   // largest side distance to wall in mm
+#define SIDEMIN    50//212   // smallest side distance to the wall in mm
+#define SIDEMAX    354//354   // largest side distance to wall in mm
 #define CENTERMIN  150   // min distance to the wall in the front
 #define CENTEROPEN 600   // distance to the wall between open/blocked
 #define IRMIN      50    // min possible reading of IR sensor
