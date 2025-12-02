@@ -53,7 +53,7 @@
 #define SIDEMAX    354//354   // largest side distance to wall in mm
 #define CENTERMIN  150   // min distance to the wall in the front
 #define CENTEROPEN 600   // distance to the wall between open/blocked
-#define CENTEROPENBLOCKED 380
+#define CENTEROPENBLOCKED 360
 #define IRMIN      50    // min possible reading of IR sensor
 #define IRMAX      800   // max possible reading of IR sensor
 

@@ -36,9 +36,9 @@
 
 // PWM parameters for controlling motor speeds.
 #define PWM_AVERAGE 800      // Average PWM for balancing
-#define SWING 300   //Define max swing in PWM
+#define SWING 400   //Define max swing in PWM
 #define PWMIN (PWM_AVERAGE - SWING)     // Minimum PWM threshold
-#define PWMAX 1000 //(PWM_AVERAGE + SWING)     // Maximum PWM threshold
+#define PWMAX 950 //(PWM_AVERAGE + SWING)     // Maximum PWM threshold
 
 
 // This divider scales down the controller output by dividing it inside the Controller.
@@ -55,7 +55,7 @@
 // static int16_t Kp = 0;               // Stable Kp value of 100 (1.0 due to GAIN_DIVIDER)
 
 // solution
-static int16_t Kp = 45;//60;//45;  //Initial Kp for the robot
+static int16_t Kp = 45;  //Initial Kp for the robot
 
 
 // =============== IMPORTANT NOTE =====================================
@@ -86,22 +86,23 @@ int32_t Error = 0;                    // Error signal for wall following
 
 typedef enum {
     Stop = 0,      // Stop state
-    ForwardRight,       // Move forward
-    LeftTurns,
-    RightTurns,
-    ForwardLeft
+    ForwardRight,       // Forward following right wall
+    LeftTurns,         //Left turn
+    RightTurns,         //Right turn
+    ForwardLeft         // Forward following left wall
 
 } state_t;
 
-static scenario_t turn = Straight;
+static scenario_t turn = Straight; //initialize turn to Straight
 
-static state_t CurrentState = ForwardRight;
+static state_t CurrentState = ForwardRight; // initialize state to ForwardRight
+
+static uint16_t timer_10msGO = 0; // initialize timer to 0
+
+static uint8_t color = RED; // initialize light color to Red
 
 
-static uint16_t timer_10msGO = 0;
-
-static uint8_t color = RED;
-
+//Define classifier scenarios to be displayed on LCD
 char StrScenario[][11] = {  "Error     ",
                             "L2Close   ",
                             "R2Close   ",
@@ -119,17 +120,12 @@ char StrScenario[][11] = {  "Error     ",
                             "CrossRoad ",
                             "Blocked   "};
 
+//Define state scenarios to display on LCD
 char StrState2[][8] = {     "Stop",      // Stop state
-                            "FR  ",       // Move forward
-                            "LT  ",
-                            "RT  ",
-                            "FL  "};
-
-
-
-
-
-
+                            "FR  ",       // Forward Left
+                            "LT  ",         //Left Turn
+                            "RT  ",         //Right Turn
+                            "FL  "};        //Forward Left
 
 // Clears and initializes the LCD display with default text and formatting
 static void LCDClear(void) {
@@ -164,10 +160,10 @@ static void LCDOut(void) {
     Nokia5110_SetCursor2(1,8); Nokia5110_OutUDec(Kp, 5);
 
     // Display sensor distances and error in their respective positions.
-    Nokia5110_SetCursor2(3,4); Nokia5110_OutSDec(timer_10msGO, 6);    // Left distance
-    Nokia5110_SetCursor2(4,4); Nokia5110_OutSDec(Right, 6);  // Center distance
-    Nokia5110_SetCursor2(5,1); Nokia5110_OutString(StrState2[CurrentState]);   // Right distance
-    Nokia5110_SetCursor2(6,1); Nokia5110_OutString(StrScenario[turn]);   // Error value
+    Nokia5110_SetCursor2(3,4); Nokia5110_OutSDec(timer_10msGO, 6);    // Timer
+    Nokia5110_SetCursor2(4,4); Nokia5110_OutSDec(Left, 6);  // Center distance
+    Nokia5110_SetCursor2(5,1); Nokia5110_OutString(StrState2[CurrentState]);   // Current State
+    Nokia5110_SetCursor2(6,1); Nokia5110_OutString(StrScenario[turn]);   // Classifier
 }
 
 
@@ -390,41 +386,36 @@ static void Controller(void){
         return;
     }
 
-    static state_t NextState = ForwardRight;
-    static int16_t leftDuty_permil = 0;
-    static int16_t rightDuty_permil = 0;
-    turn = Classify(Left, Center, Right);
-    static int16_t timer_10msSTOP = 0;
-    static int16_t adjustment = 0;
-    const int16_t turnTimer1 = 200;//200;
-    const int16_t turnTimer2 = 750;
-    const int16_t rightTurnTimer = 80;
-    const int16_t rightCenterPosition = 200;
-    const int16_t leftCenterPosition = 200;
-    const float insideTurnOffset = 0.46873;///0.46873; // 0.69 * (161/237)
-    const float outsideTurnOffset = 0.76;//0.76;
-    //int16_t adjustment = 0;
-    //int16_t timeExtra = 0;
+    static state_t NextState = ForwardRight; // Initialize next state as Forward right
+    static int16_t leftDuty_permil = 0; // Initialize left Duty Permil
+    static int16_t rightDuty_permil = 0; // Initialize right Duty Permil
+    turn = Classify(Left, Center, Right); //Set turn to result of classify
+    static int16_t timer_10msSTOP = 0; // Initialize stop timer that runs when stopped
+    static int16_t adjustment = 0; // Initialize PID adjustment to 0
+    const int16_t turnTimer1 = 280;// Set turn timer 1 to 2 seconds
+    const int16_t turnTimer2 = 675; // Set turn timer 2 to 7.5 seconds
+    const int16_t rightTurnTimer = 110; //Set right turn timer to 0.8 seconds
+    const int16_t rightCenterPosition = 120; // Set right wall following distance from wall
+    const int16_t leftCenterPosition = 250; // Set left wall following distance from wall
+    const float insideTurnOffset = 0.7*0.6; ///0.46873; // 0.69 * (161/237) //Set inside wheel turn scaler
+    const float outsideTurnOffset = 0.7*1;//0.76; //0.76; //Set outside wheel turn scaler
+
 
     switch (CurrentState) {
+        // Right Wall Follower state
         case ForwardRight:
-            // Controller is enabled, so proceed with executing the control logic
 
-            // ====================================================================
-            // Lab 17 implementation begins here
-            // ====================================================================
-
-            // Implement a proportional controller to maintain distance from both walls
-
-
-            // Calculate error as the difference between Left and Right wall distances
-            if ((timer_10msGO < turnTimer2) && (timer_10msGO > turnTimer1)){
+            //if in the correct time interval
+            if (((timer_10msGO < turnTimer2) && (timer_10msGO > 500)) || ((timer_10msGO > turnTimer1) && (timer_10msGO < 365))){
+                // if classifier says left turn or tee joint
                 if ((turn == LeftTurn)||(turn == TeeJoint)){
+                    //next state is left turn
                     NextState = LeftTurns;
                 }
             }
+            //if in the correct time interval
             if (timer_10msGO >= turnTimer2){
-                if ((turn == LeftTurn)||(turn == TeeJoint)||(turn == RightTurn)){
+                if ((turn == TeeJoint)||(turn == RightTurn)){
                     NextState = RightTurns;
                     timerCheck = timer_10msGO;
                 }
@@ -434,7 +425,7 @@ static void Controller(void){
             adjustment = (Kp*Error)/GAIN_DIVIDER;
 
             // Calculate the left and right motor duty cycles based on proportional control
-            leftDuty_permil = PWM_AVERAGE - adjustment;   // Adjust left motor speed based on error
+            leftDuty_permil = (PWM_AVERAGE - adjustment);   // Adjust left motor speed based on error
             rightDuty_permil = PWM_AVERAGE + adjustment;  //Adjust right motor speed based on error
 
             // Ensure the calculated PWM duty cycles are within the motor's operational range
@@ -460,8 +451,17 @@ static void Controller(void){
             if (turn == Straight){
                 NextState = ForwardRight;
             }
+            if ((timer_10msGO>365 && timer_10msGO < 500)||(timer_10msGO>turnTimer2)){
+                NextState = ForwardRight;
+            }
             leftDuty_permil = insideTurnOffset*(PWM_AVERAGE);// 161/237
             rightDuty_permil = outsideTurnOffset*PWM_AVERAGE;
+
+//            if ((timer_10msGO>500) && (timer_10msGO<turnTimer2)){
+//                leftDuty_permil = 0.7*0.7*(PWM_AVERAGE);// 161/237
+//                rightDuty_permil = 0.7*1*PWM_AVERAGE;
+//            }
+
             timer_10msGO++;
             break;
 
@@ -542,7 +542,7 @@ static void Controller(void){
     // Update motor speed values based on calculated duty cycles if actuator control is enabled
     if (IsActuatorEnabled) {
         if (CurrentState != Stop){
-            Motor_Forward(leftDuty_permil, rightDuty_permil); // Set motor speeds to maintain center position
+            Motor_Forward(0.9*leftDuty_permil, rightDuty_permil); // Set motor speeds to maintain center position
         } else {
             Motor_Stop(leftDuty_permil, rightDuty_permil);
         }
