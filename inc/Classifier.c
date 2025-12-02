@@ -53,6 +53,7 @@
 #define SIDEMAX    354//354   // largest side distance to wall in mm
 #define CENTERMIN  150   // min distance to the wall in the front
 #define CENTEROPEN 600   // distance to the wall between open/blocked
+#define CENTEROPENBLOCKED 380
 #define IRMIN      50    // min possible reading of IR sensor
 #define IRMAX      800   // max possible reading of IR sensor
 
@@ -87,7 +88,7 @@ scenario_t Classify(int32_t left_mm, int32_t center_mm, int32_t right_mm) {
             result = result + CenterTooClose;
         }
     } else if (center_mm < CENTEROPEN){
-        if ((left_mm < SIDEMAX) && (right_mm < SIDEMAX)){
+        if ((center_mm < CENTEROPENBLOCKED) && (left_mm < SIDEMAX) && (right_mm < SIDEMAX)){
             result = Blocked;
         } else if (left_mm < SIDEMAX){
             result = RightTurn;

@@ -4,7 +4,7 @@
 
 
 int main(void){
-    Level1();
-    //Level2();
+    //Level1();
+    Level2();
     //Level3();
 }

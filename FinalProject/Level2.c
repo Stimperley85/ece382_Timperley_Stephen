@@ -35,15 +35,11 @@
 #define MINMAX(Min, Max, X) ((X) < (Min) ? (Min) : ((X) > (Max) ? (Max) : (X)))
 
 // PWM parameters for controlling motor speeds.
-#define PWM_AVERAGE 800//700//350                 // Average PWM for balancing
-#define SWING 300
+#define PWM_AVERAGE 800      // Average PWM for balancing
+#define SWING 300   //Define max swing in PWM
 #define PWMIN (PWM_AVERAGE - SWING)     // Minimum PWM threshold
-#define PWMAX 1000//(PWM_AVERAGE + SWING)     // Maximum PWM threshold
+#define PWMAX 1000 //(PWM_AVERAGE + SWING)     // Maximum PWM threshold
 
-//#define TurnTime1 100
-//#define TurnTime2 200
-
-//#define TurnDistance 400
 
 // This divider scales down the controller output by dividing it inside the Controller.
 // Specifically, (Kp * error) / GAIN_DIVIDER is used to compute the controller output.
@@ -59,7 +55,7 @@
 // static int16_t Kp = 0;               // Stable Kp value of 100 (1.0 due to GAIN_DIVIDER)
 
 // solution
-static int16_t Kp = 45;//75; //135//50,150
+static int16_t Kp = 45;//60;//45;  //Initial Kp for the robot
 
 
 // =============== IMPORTANT NOTE =====================================
@@ -169,7 +165,7 @@ static void LCDOut(void) {
 
     // Display sensor distances and error in their respective positions.
     Nokia5110_SetCursor2(3,4); Nokia5110_OutSDec(timer_10msGO, 6);    // Left distance
-    Nokia5110_SetCursor2(4,4); Nokia5110_OutSDec(Center, 6);  // Center distance
+    Nokia5110_SetCursor2(4,4); Nokia5110_OutSDec(Right, 6);  // Center distance
     Nokia5110_SetCursor2(5,1); Nokia5110_OutString(StrState2[CurrentState]);   // Right distance
     Nokia5110_SetCursor2(6,1); Nokia5110_OutString(StrScenario[turn]);   // Error value
 }
@@ -356,7 +352,9 @@ static void TxBuffer(void) {
 // This function should be triggered periodically by TimerA ISR.
 static void IRsampling(void){
 
+
     uint16_t raw17, raw14, raw16;               // Variables to store raw ADC values for each sensor
+
     ADC_In17_14_16(&raw17, &raw14, &raw16);     // Read ADC values from channels 17, 14, and 16
 
     uint32_t nr = LPF_Calc(raw17);              // Apply low-pass filter (LPF) to smooth right sensor data
@@ -398,6 +396,13 @@ static void Controller(void){
     turn = Classify(Left, Center, Right);
     static int16_t timer_10msSTOP = 0;
     static int16_t adjustment = 0;
+    const int16_t turnTimer1 = 200;//200;
+    const int16_t turnTimer2 = 750;
+    const int16_t rightTurnTimer = 80;
+    const int16_t rightCenterPosition = 200;
+    const int16_t leftCenterPosition = 200;
+    const float insideTurnOffset = 0.46873;///0.46873; // 0.69 * (161/237)
+    const float outsideTurnOffset = 0.76;//0.76;
     //int16_t adjustment = 0;
     //int16_t timeExtra = 0;
 
@@ -413,19 +418,19 @@ static void Controller(void){
 
 
             // Calculate error as the difference between Left and Right wall distances
-            if (timer_10msGO < 800){
+            if ((timer_10msGO < turnTimer2) && (timer_10msGO > turnTimer1)){
                 if ((turn == LeftTurn)||(turn == TeeJoint)){
                     NextState = LeftTurns;
                 }
             }
-            if (timer_10msGO >= 800){
+            if (timer_10msGO >= turnTimer2){
                 if ((turn == LeftTurn)||(turn == TeeJoint)||(turn == RightTurn)){
                     NextState = RightTurns;
                     timerCheck = timer_10msGO;
                 }
             }
 
-            Error = (200 - Right);
+            Error = (rightCenterPosition - Right);
             adjustment = (Kp*Error)/GAIN_DIVIDER;
 
             // Calculate the left and right motor duty cycles based on proportional control
@@ -455,18 +460,18 @@ static void Controller(void){
             if (turn == Straight){
                 NextState = ForwardRight;
             }
-            leftDuty_permil = 0.7*(PWM_AVERAGE*163)/237;//163
-            rightDuty_permil = 0.75*PWM_AVERAGE;
+            leftDuty_permil = insideTurnOffset*(PWM_AVERAGE);// 161/237
+            rightDuty_permil = outsideTurnOffset*PWM_AVERAGE;
             timer_10msGO++;
             break;
 
         case RightTurns:
 
-            if ((turn == Straight)||((timer_10msGO-timerCheck)>100)){
+            if ((turn == Straight)||((timer_10msGO-timerCheck)>rightTurnTimer)){
                 NextState = ForwardLeft;
             }
-            rightDuty_permil = 0.7*(PWM_AVERAGE*161)/237;//163
-            leftDuty_permil = 0.75*PWM_AVERAGE;
+            rightDuty_permil = insideTurnOffset*(PWM_AVERAGE);//163
+            leftDuty_permil = outsideTurnOffset*PWM_AVERAGE;
             timer_10msGO++;
             break;
 
@@ -477,7 +482,7 @@ static void Controller(void){
                 NextState = Stop;
             }
 
-            Error = -(200 - Left);
+            Error = -(leftCenterPosition - Left);
             adjustment = (Kp*Error)/GAIN_DIVIDER;
 
             // Calculate the left and right motor duty cycles based on proportional control
@@ -594,7 +599,7 @@ void Level2(void){
     uint16_t const LcdUpdateRate = 5;
 
     IsControllerEnabled = false;      // Start with controller disabled
-    IsActuatorEnabled = false;        // Actuator disabled at startup
+    IsActuatorEnabled = true;        // Actuator disabled at startup
     NumControllerExecuted = 0;        // Reset execution count
 
     EnableInterrupts();               // Enable global interrupts to start periodic tasks
@@ -622,7 +627,7 @@ void Level2(void){
 
         LaunchPad_RGB(RGB_OFF); // Turn off RGB LED on LaunchPad
         Motor_Coast();          // Set motors to coast mode (stop gradually)
-        Clock_Delay1ms(300);    // Delay to stabilize
+        //Clock_Delay1ms(300);    // Delay to stabilize
 
         // Update control parameters based on user input or other settings
         UpdateParameters();
