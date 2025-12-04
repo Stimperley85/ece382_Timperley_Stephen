@@ -392,21 +392,23 @@ static void Controller(void){
     turn = Classify(Left, Center, Right); //Set turn to result of classify
     static int16_t timer_10msSTOP = 0; // Initialize stop timer that runs when stopped
     static int16_t adjustment = 0; // Initialize PID adjustment to 0
-    const int16_t turnTimer1 = 280;// Set turn timer 1 to 2 seconds
-    const int16_t turnTimer2 = 675; // Set turn timer 2 to 7.5 seconds
+    const int16_t turnTimer1 = 280;// Set turn timer 1 to 2.8 seconds
+    const int16_t turnTimer2 = 365; // Set turn timer 2 to 3.65 seconds
+    const int16_t turnTimer3 = 500; // Set turn timer 3 to 5 seconds
+    const int16_t turnTimer4 = 675; // Set turn timer 4 to 6.75 seconds
     const int16_t rightTurnTimer = 110; //Set right turn timer to 0.8 seconds
     const int16_t rightCenterPosition = 120; // Set right wall following distance from wall
     const int16_t leftCenterPosition = 250; // Set left wall following distance from wall
     const float insideTurnOffset = 0.7*0.6; ///0.46873; // 0.69 * (161/237) //Set inside wheel turn scaler
     const float outsideTurnOffset = 0.7*1;//0.76; //0.76; //Set outside wheel turn scaler
-
+    const float leftPWMScaler = 0.9; //scaler dependent on the motor
 
     switch (CurrentState) {
         // Right Wall Follower state
         case ForwardRight:
 
             //if in the correct time interval
-            if (((timer_10msGO < turnTimer2) && (timer_10msGO > 500)) || ((timer_10msGO > turnTimer1) && (timer_10msGO < 365))){
+            if (((timer_10msGO < turnTimer4) && (timer_10msGO > turnTimer3)) || ((timer_10msGO > turnTimer1) && (timer_10msGO < turnTimer2))){
                 // if classifier says left turn or tee joint
                 if ((turn == LeftTurn)||(turn == TeeJoint)){
                     //next state is left turn
@@ -414,7 +416,7 @@ static void Controller(void){
                 }
             }
             //if in the correct time interval
-            if (timer_10msGO >= turnTimer2){
+            if (timer_10msGO >= turnTimer4){
                 if ((turn == TeeJoint)||(turn == RightTurn)){
                     NextState = RightTurns;
                     timerCheck = timer_10msGO;
@@ -442,6 +444,7 @@ static void Controller(void){
                 rightDuty_permil = PWMIN;
             }
 
+            //Increment timer
             timer_10msGO++;
 
             break;
@@ -451,37 +454,39 @@ static void Controller(void){
             if (turn == Straight){
                 NextState = ForwardRight;
             }
-            if ((timer_10msGO>365 && timer_10msGO < 500)||(timer_10msGO>turnTimer2)){
+            if ((timer_10msGO>turnTimer2 && timer_10msGO < turnTimer3)||(timer_10msGO>turnTimer4)){
                 NextState = ForwardRight;
             }
             leftDuty_permil = insideTurnOffset*(PWM_AVERAGE);// 161/237
             rightDuty_permil = outsideTurnOffset*PWM_AVERAGE;
 
-//            if ((timer_10msGO>500) && (timer_10msGO<turnTimer2)){
-//                leftDuty_permil = 0.7*0.7*(PWM_AVERAGE);// 161/237
-//                rightDuty_permil = 0.7*1*PWM_AVERAGE;
-//            }
-
+            //increment timer
             timer_10msGO++;
             break;
 
         case RightTurns:
 
+            //Go back to Forward left if straight and in the right time block
             if ((turn == Straight)||((timer_10msGO-timerCheck)>rightTurnTimer)){
                 NextState = ForwardLeft;
             }
+
+            //Set pwm
             rightDuty_permil = insideTurnOffset*(PWM_AVERAGE);//163
             leftDuty_permil = outsideTurnOffset*PWM_AVERAGE;
+            //increment timer
             timer_10msGO++;
             break;
 
 
         case ForwardLeft:
 
+            //if blocked change state to stopped
             if (turn == Blocked){
                 NextState = Stop;
             }
 
+            //Calculate error and adjustment
             Error = -(leftCenterPosition - Left);
             adjustment = (Kp*Error)/GAIN_DIVIDER;
 
@@ -502,18 +507,22 @@ static void Controller(void){
             if (rightDuty_permil < PWMIN){
                 rightDuty_permil = PWMIN;
             }
+            //increment timer
             timer_10msGO++;
             break;
 
         case Stop:
 
+            //if not blocked go back to forward left
             if (turn != Blocked){
                 NextState = ForwardLeft;
             }
+
+            //set pwm to 0
             leftDuty_permil = 0;
             rightDuty_permil = 0;
 
-
+            //blink light
             if (timer_10msSTOP%50 == 0){
                 if (color == RED){
                     color = BLUE;
@@ -524,11 +533,14 @@ static void Controller(void){
 
             LaunchPad_RGB(color);
 
+            //Increment stop timer
             timer_10msSTOP++;
 
             break;
 
     }
+
+    //set current to next state
     CurrentState = NextState;
 
 
@@ -542,13 +554,14 @@ static void Controller(void){
     // Update motor speed values based on calculated duty cycles if actuator control is enabled
     if (IsActuatorEnabled) {
         if (CurrentState != Stop){
-            Motor_Forward(0.9*leftDuty_permil, rightDuty_permil); // Set motor speeds to maintain center position
+
+            Motor_Forward(leftPWMScaler*leftDuty_permil, rightDuty_permil); // Set motor speeds to maintain center position
         } else {
             Motor_Stop(leftDuty_permil, rightDuty_permil);
         }
 
         // If there is remaining space in the buffer, store control data for analysis
-        if (BufferIndex < BUFFER_SIZE) {
+        if ((BufferIndex < BUFFER_SIZE)&&(timer_10msGO%2 == 0)) {
             TimerGO[BufferIndex] = timer_10msGO;                 // Store current error value
             LeftDutyBuffer[BufferIndex] = leftDuty_permil;    // Store left motor duty cycle
             RightDutyBuffer[BufferIndex] = rightDuty_permil;  // Store right motor duty cycle

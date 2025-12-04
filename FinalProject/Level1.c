@@ -193,23 +193,24 @@ typedef struct command {
 } command_t;
 
 // Control parameters for various states (distances and duty cycles)
-//#define FRWD_DIST       700   // Replace this line for forward distance
-#define BKWD_DIST       70   // Replace this line for backward distance
-#define TR90_DIST      18//111   // Replace this line for 90 degree turn
-#define TR90_DIST_RIGHT 12
-//#define TR60_DIST       74   // Replace this line for 60 degree turn
-#define TR30_DIST       1//37   // Replace this line for 30 degree turn
+//#define FRWD_DIST       700   // forward distance
+#define BKWD_DIST       70   // backward distance
+#define TR90_DIST      18//111   // 90 degree left turn
+#define TR90_DIST_RIGHT 12       // 90 degree right turn
+#define TR30_DIST       1//37   // 30 degree turn
 
 #define NUM_STATES      5     // Number of robot states
 #define LEN_STR_STATE   5     // String length for state names
 
-#define STOP_MARGIN     60  // How close to (0,0) should the robot stop
-#define STOP_MARGIN_X   200
+#define STOP_MARGIN     60  // Stop margin y
+#define STOP_MARGIN_X   200 // stop margin x
+static int8_t CENTERBUMP = 0b00001100; //Center bump
 
 static char strState[NUM_STATES][LEN_STR_STATE] = {"STOP", "FRWD", "BKWD", "LFTR", "RGTR"};  // State names
 
-static int16_t x_cord = 360;
-static int16_t y_cord = 0;
+
+static int16_t x_cord = 360; //final target x cord
+static int16_t y_cord = 0;  //final target y cord
 
 
 // Control commands for each state
@@ -236,10 +237,10 @@ static void LCDClear3(void) {
 static void LCDOut3(void) {
     // Write your code here
     Nokia5110_SetCursor2(3,6); Nokia5110_OutString(strState[CurrentState]);  // Show current state
-    Nokia5110_SetCursor2(4, 5); Nokia5110_OutSDec(x_cord,5);   // Show distance traveled
-    Nokia5110_SetCursor2(5, 5); Nokia5110_OutSDec(y_cord,5);   // Show distance traveled
-    Nokia5110_SetCursor2(6, 2); Nokia5110_OutUDec(timer_20ms/50,5);
-    Nokia5110_SetCursor2(6, 12); Nokia5110_OutChar(heading);   // Show distance traveled
+    Nokia5110_SetCursor2(4, 5); Nokia5110_OutSDec(x_cord,5);   // Show distance traveled in x
+    Nokia5110_SetCursor2(5, 5); Nokia5110_OutSDec(y_cord,5);   // Show distance traveled in y
+    Nokia5110_SetCursor2(6, 2); Nokia5110_OutUDec(timer_20ms/50,5); // Show timer
+    Nokia5110_SetCursor2(6, 12); Nokia5110_OutChar(heading);   // Show heading
 }
 
 // Counter for how many times the controller function has been called
@@ -260,6 +261,7 @@ static void Controller3(void) {
 
     NumControllerExecuted++;  // Increment counter every time the controller runs
 
+    // initialize color as red
     static uint8_t color = RED;
 
     // Get the PWM duty cycles for the current state
@@ -280,6 +282,7 @@ static void Controller3(void) {
 
         case Stop:  // Remain in Stop state indefinitely
 
+            // blink light
             if (timer_20ms%25 == 0){
                 if (color == RED){
                     color = BLUE;
@@ -288,7 +291,7 @@ static void Controller3(void) {
                 }
             }
 
-
+            //display led color
             LaunchPad_RGB(color);
 
             break;
@@ -298,7 +301,7 @@ static void Controller3(void) {
             // Write your code here
 
 
-            if (bumpRead & 0b00001100){
+            if (bumpRead & CENTERBUMP){
                 NextState = Backward;
             }
 
@@ -405,7 +408,7 @@ static void Controller3(void) {
             break;
     }
 
-    // Update the timer or reset if transitioning to a new state
+    // Update heading
     if ((CurrentState != Backward) && (CurrentState != RightTurn) && (CurrentState != LeftTurn)) {
 
         if (heading == 'N'){
@@ -433,23 +436,19 @@ static void Controller3(void) {
         }
     }
 
+    //if going no backward, right turn, or left turn reset
     if ((CurrentState != Backward)&&(CurrentState != RightTurn) && (CurrentState != LeftTurn)){
         Tachometer_ResetSteps();
     }
 
-
+    //increment timer
     timer_20ms++;
-    //    timer_20ms++;  // Stay in current state, increment timer
-    //} else {
-    //    timer_20ms = 0;  // New state, reset timer and distance measurements
-    //    Tachometer_ResetSteps();
+
 
     // Set the current state to the next state for the next iteration
     CurrentState = NextState;
 
-    //if(timer_20ms < 1000){  // 1000 * 10 ms = 10 seconds
-
-        // Store the current speed, distance, and duty cycle in the respective buffers.
+    // Store the current speed, distance, and duty cycle in the respective buffers once per 4 cycles
     if (timer_20ms%4 == 0) {
         SpeedBufferL[timer_20ms/4] = LeftSpeed_rpm;
         SpeedBufferR[timer_20ms/4] = RightSpeed_rpm;
@@ -522,9 +521,6 @@ void Level1(void) {
         Motor_Coast();          // Set motors to coast mode (stop gradually)
         Clock_Delay1ms(300);    // Delay to stabilize
 
-        // Update control parameters based on user input or other settings
-        //UpdateParameters();
-
         // Transmit the buffer data to the PC for analysis
         TxBuffer();
 
@@ -536,10 +532,5 @@ void Level1(void) {
     }
 }
 
-
-//void main(void){
-//    //Program16_1();
-//    //Program16_2();
-//    Program16_3();
 
 
